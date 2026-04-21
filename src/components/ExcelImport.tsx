@@ -39,7 +39,19 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onSuccess }) => {
         body: formData,
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Server response was not JSON:", responseText);
+        let errorMsg = "Server communication error";
+        if (response.status === 404) errorMsg = "Import service endpoint not found (404)";
+        if (response.status === 413) errorMsg = "File is too large for the server to process";
+        if (response.status === 500) errorMsg = "Server encountered an internal error";
+        throw new Error(`${errorMsg}. Please try again or contact support.`);
+      }
       
       if (!response.ok) {
         throw new Error(data.error || "Failed to upload file");
