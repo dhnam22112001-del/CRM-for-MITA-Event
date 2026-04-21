@@ -273,8 +273,13 @@ async function start() {
   });
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`>>> Nexus Server listening at http://localhost:${PORT}`);
-    console.log(`>>> Mode: ${process.env.NODE_ENV || 'development'}`);
+    console.log("");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log(`🚀 Nexus CRM Server is now LIVE`);
+    console.log(`📡 URL: http://localhost:${PORT}`);
+    console.log(`🛠️  Mode: ${process.env.NODE_ENV || 'development'}`);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("");
   });
 }
 
