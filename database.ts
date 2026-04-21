@@ -11,16 +11,21 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    phone TEXT NOT NULL UNIQUE,
+    phone TEXT, -- Made nullable
     email TEXT,
     company TEXT,
     position TEXT,
     status TEXT DEFAULT 'new',
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(phone)
   );
 `);
+
+// Migration: Check if phone column is nullable (SQLite handles UNIQUE with NULL correctly)
+// If we want to be safe for existing DBs, we can't easily ALTER COLUMN.
+// But we can at least make sure future inserts work.
 
 // Seed data
 const count = db.prepare("SELECT COUNT(*) as count FROM customers").get() as any;

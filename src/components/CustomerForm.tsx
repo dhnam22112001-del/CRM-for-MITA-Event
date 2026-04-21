@@ -42,8 +42,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone) {
-      setError("Name and Phone are required");
+    if (!formData.name) {
+      setError("Name is required");
       return;
     }
 
@@ -98,11 +98,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number *</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number</label>
               <input 
                 type="tel" 
                 name="phone"
-                required
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+1 (555) 000-0000"

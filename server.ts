@@ -29,7 +29,7 @@ const upload = multer({
 // Validation Schemas
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  phone: z.string().min(5, "Valid phone is required"),
+  phone: z.string().optional().or(z.literal("")),
   email: z.string().email().optional().or(z.literal("")),
   company: z.string().optional(),
   position: z.string().optional(),
@@ -61,9 +61,12 @@ app.get("/api/customers", (req, res) => {
 app.post("/api/customers", (req, res) => {
   try {
     const validated = customerSchema.parse(req.body);
-    const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(validated.phone);
-    if (existing) {
-      return res.status(400).json({ error: "Duplicate phone number" });
+    
+    if (validated.phone) {
+      const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(validated.phone);
+      if (existing) {
+        return res.status(400).json({ error: "Duplicate phone number" });
+      }
     }
 
     const info = db.prepare(`
@@ -71,7 +74,7 @@ app.post("/api/customers", (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       validated.name,
-      validated.phone,
+      validated.phone || null,
       validated.email || null,
       validated.company || null,
       validated.position || null,
@@ -94,9 +97,12 @@ app.put("/api/customers/:id", (req, res) => {
   const { id } = req.params;
   try {
     const validated = customerSchema.parse(req.body);
-    const existing = db.prepare("SELECT id FROM customers WHERE phone = ? AND id != ?").get(validated.phone, id);
-    if (existing) {
-      return res.status(400).json({ error: "Phone number already in use" });
+    
+    if (validated.phone) {
+      const existing = db.prepare("SELECT id FROM customers WHERE phone = ? AND id != ?").get(validated.phone, id);
+      if (existing) {
+        return res.status(400).json({ error: "Phone number already in use" });
+      }
     }
 
     db.prepare(`
@@ -105,7 +111,7 @@ app.put("/api/customers/:id", (req, res) => {
       WHERE id = ?
     `).run(
       validated.name,
-      validated.phone,
+      validated.phone || null,
       validated.email || null,
       validated.company || null,
       validated.position || null,
@@ -173,7 +179,7 @@ app.post("/api/import-excel", upload.single("file"), (req, res) => {
           const status = (row.Status || row.status || row["Trạng thái"] || "new").toString().toLowerCase();
           const notes = row.Notes || row.notes || row.Comment || row["Ghi chú"] || "";
 
-          if (!name || !phone) {
+          if (!name) {
             results.skipped++;
             continue;
           }
@@ -181,15 +187,17 @@ app.post("/api/import-excel", upload.single("file"), (req, res) => {
           const validStatuses = ["new", "contacted", "converted", "lost"];
           const finalStatus = validStatuses.includes(status) ? status : "new";
 
-          const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(phone.toString());
-          if (existing) {
-            results.skipped++;
-            continue;
+          if (phone) {
+            const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(phone.toString());
+            if (existing) {
+              results.skipped++;
+              continue;
+            }
           }
 
           insertStmt.run(
             name.toString(),
-            phone.toString(),
+            phone ? phone.toString() : null,
             email.toString() || null,
             company.toString() || null,
             position.toString() || null,
