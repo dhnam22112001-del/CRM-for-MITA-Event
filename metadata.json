@@ -1,0 +1,10 @@
+{
+  "name": "Nexus CRM",
+  "description": "A high-performance, modern CRM with SQLite backend and Excel import capabilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "customer_management",
+    "excel_import",
+    "dashboard_analytics"
+  ]
+}
