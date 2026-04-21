@@ -39,9 +39,12 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onSuccess }) => {
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to upload file");
-
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload file");
+      }
+
       setResult(data);
       onSuccess();
     } catch (err: any) {

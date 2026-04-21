@@ -11,9 +11,13 @@ const app = express();
 const PORT = 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ limit: "20mb", extended: true }));
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // Validation Schemas
 const customerSchema = z.object({
@@ -127,7 +131,6 @@ app.post("/api/import-excel", upload.single("file"), (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
 
-    // Dynamic mapping - look for columns that match our schema
     const results = {
       imported: 0,
       skipped: 0,
@@ -142,14 +145,14 @@ app.post("/api/import-excel", upload.single("file"), (req, res) => {
     db.transaction(() => {
       for (const row of data as any[]) {
         try {
-          // Robust key finding
-          const name = row.Name || row.name || row["Full Name"] || "";
-          const phone = row.Phone || row.phone || row["Phone Number"] || row["Telephone"] || "";
+          // Robust key finding including Vietnamese headers
+          const name = row.Name || row.name || row["Full Name"] || row["Họ tên"] || row["Tên"] || row["Tên khách hàng"] || "";
+          const phone = row.Phone || row.phone || row["Phone Number"] || row["Telephone"] || row["SĐT"] || row["Số điện thoại"] || row["Điện thoại"] || "";
           const email = row.Email || row.email || "";
-          const company = row.Company || row.company || row["Organization"] || "";
-          const position = row.Position || row.position || row["Job Title"] || "";
-          const status = (row.Status || row.status || "new").toLowerCase();
-          const notes = row.Notes || row.notes || row.Comment || "";
+          const company = row.Company || row.company || row["Organization"] || row["Công ty"] || "";
+          const position = row.Position || row.position || row["Job Title"] || row["Chức vụ"] || "";
+          const status = (row.Status || row.status || row["Trạng thái"] || "new").toString().toLowerCase();
+          const notes = row.Notes || row.notes || row.Comment || row["Ghi chú"] || "";
 
           if (!name || !phone) {
             results.skipped++;
@@ -178,6 +181,7 @@ app.post("/api/import-excel", upload.single("file"), (req, res) => {
           );
           results.imported++;
         } catch (e: any) {
+          console.error("Row import error:", e);
           results.errors.push(e.message);
           results.skipped++;
         }
@@ -185,8 +189,9 @@ app.post("/api/import-excel", upload.single("file"), (req, res) => {
     })();
 
     res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to parse Excel file" });
+  } catch (error: any) {
+    console.error("Excel parse error:", error);
+    res.status(500).json({ error: "Failed to parse Excel file: " + error.message });
   }
 });
 
@@ -227,5 +232,16 @@ async function startServer() {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
+
+// Global error handler for multer
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ error: "File too large. Max size is 10MB." });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
 
 startServer();

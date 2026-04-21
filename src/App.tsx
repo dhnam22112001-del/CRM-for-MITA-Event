@@ -81,7 +81,16 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard stats={stats} onNavigate={setActiveTab} />;
+        return (
+          <Dashboard 
+            stats={stats} 
+            onNavigate={setActiveTab} 
+            onAdd={() => {
+              setActiveTab("customers");
+              setShowForm(true);
+            }} 
+          />
+        );
       case "customers":
         return (
           <CustomerTable 

@@ -12,9 +12,10 @@ import { cn } from "../lib/utils";
 interface DashboardProps {
   stats: CustomerStats | null;
   onNavigate: (tab: string) => void;
+  onAdd: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate, onAdd }) => {
   const cards = [
     { 
       label: "New Leads", 
@@ -38,6 +39,20 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <span className="text-black font-medium">Dashboard</span>
+          <span className="px-1">/</span>
+          <span className="hover:text-black cursor-pointer">Overview</span>
+        </div>
+        <button 
+          onClick={onAdd}
+          className="bg-black text-white text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded hover:bg-gray-800 transition-colors"
+        >
+          Add Contact
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cards.map((card, index) => (
           <motion.div
