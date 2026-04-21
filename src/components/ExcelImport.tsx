@@ -47,7 +47,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onSuccess }) => {
       } catch (parseError) {
         console.error("Server response was not JSON:", responseText);
         let errorMsg = "Server communication error";
-        if (response.status === 404) errorMsg = "Import service endpoint not found (404)";
+        if (response.status === 404) errorMsg = `Endpoint not found (404). Server said: ${responseText.substring(0, 50)}...`;
         if (response.status === 413) errorMsg = "File is too large for the server to process";
         if (response.status === 500) errorMsg = "Server encountered an internal error";
         throw new Error(`${errorMsg}. Please try again or contact support.`);
@@ -88,6 +88,23 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onSuccess }) => {
               onChange={handleFileChange}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
+          </div>
+
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/health");
+                  const text = await res.text();
+                  alert(`API Health Check: [${res.status}] ${text}`);
+                } catch (e: any) {
+                  alert(`API Health Check Error: ${e.message}`);
+                }
+              }}
+              className="text-[10px] text-gray-400 hover:text-black underline transition-colors"
+            >
+              Troubleshoot API Connection
+            </button>
           </div>
 
           {file && !result && (
