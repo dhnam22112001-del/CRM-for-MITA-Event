@@ -56,8 +56,15 @@ export default function App() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to save customer");
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save customer");
+      } else {
+        const text = await response.text();
+        console.error("Non-JSON error response:", text);
+        throw new Error(`Server error (${response.status}): ${text.substring(0, 100)}...`);
+      }
     }
 
     await fetchData();

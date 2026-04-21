@@ -23,9 +23,40 @@ db.exec(`
   );
 `);
 
-// Migration: Check if phone column is nullable (SQLite handles UNIQUE with NULL correctly)
-// If we want to be safe for existing DBs, we can't easily ALTER COLUMN.
-// But we can at least make sure future inserts work.
+// Migration: Ensure 'phone' column is actually nullable if table already existed
+try {
+  const tableInfo = db.prepare("PRAGMA table_info(customers)").all() as any[];
+  const phoneCol = tableInfo.find(col => col.name === 'phone');
+  
+  if (phoneCol && phoneCol.notnull === 1) {
+    console.log("Migration: Making 'phone' column nullable...");
+    // SQLite doesn't support 'ALTER TABLE ALTER COLUMN'
+    // This is a simplified migration for development
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE customers_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          phone TEXT,
+          email TEXT,
+          company TEXT,
+          position TEXT,
+          status TEXT DEFAULT 'new',
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(phone)
+        );
+        INSERT INTO customers_new SELECT * FROM customers;
+        DROP TABLE customers;
+        ALTER TABLE customers_new RENAME TO customers;
+      `);
+    })();
+    console.log("Migration: Completed successfully.");
+  }
+} catch (migrationError) {
+  console.error("Migration Error:", migrationError);
+}
 
 // Seed data
 const count = db.prepare("SELECT COUNT(*) as count FROM customers").get() as any;
