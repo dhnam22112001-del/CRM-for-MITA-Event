@@ -9,7 +9,6 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import CustomerTable from "./components/CustomerTable";
 import CustomerForm from "./components/CustomerForm";
-import ExcelImport from "./components/ExcelImport";
 import { Customer, CustomerStats } from "./types";
 
 export default function App() {
@@ -28,12 +27,13 @@ export default function App() {
         fetch("/api/stats")
       ]);
       
-      if (customersRes.ok && statsRes.ok) {
-        const customersData = await customersRes.json();
-        const statsData = await statsRes.json();
-        setCustomers(customersData);
-        setStats(statsData);
-      }
+      if (!customersRes.ok || !statsRes.ok) throw new Error("Failed to fetch data");
+      
+      const customersData = await customersRes.json();
+      const statsData = await statsRes.json();
+      
+      setCustomers(customersData);
+      setStats(statsData);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -77,9 +77,8 @@ export default function App() {
 
     try {
       const response = await fetch(`/api/customers/${id}`, { method: "DELETE" });
-      if (response.ok) {
-        await fetchData();
-      }
+      if (!response.ok) throw new Error("Delete failed");
+      await fetchData();
     } catch (error) {
       console.error("Failed to delete:", error);
     }
@@ -111,8 +110,6 @@ export default function App() {
             onDelete={handleDeleteCustomer}
           />
         );
-      case "import":
-        return <ExcelImport onSuccess={fetchData} />;
       default:
         return null;
     }

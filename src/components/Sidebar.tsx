@@ -18,7 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { id: "customers", icon: Users, label: "Customers" },
-    { id: "import", icon: FileUp, label: "Import" },
   ];
 
   return (

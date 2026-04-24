@@ -39,9 +39,9 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filtered = customers.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || 
+    const matchesSearch = c.full_name?.toLowerCase().includes(search.toLowerCase()) || 
                          c.company?.toLowerCase().includes(search.toLowerCase()) ||
-                         c.phone.includes(search);
+                         c.phone?.includes(search);
     const matchesFilter = statusFilter === "all" || c.status === statusFilter;
     return matchesSearch && matchesFilter;
   });
@@ -115,7 +115,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 filtered.map((customer) => (
                   <tr key={customer.id} className="hover:bg-[#fafafa] transition-colors group">
                     <td className="px-6 py-3">
-                      <div className="font-medium text-[#1a1a1a]">{customer.name}</div>
+                      <div className="font-medium text-[#1a1a1a]">{customer.full_name}</div>
                       <div className="text-[10px] text-gray-400">{customer.email || "no-email@nexus.io"}</div>
                     </td>
                     <td className="px-6 py-3 text-gray-600">
